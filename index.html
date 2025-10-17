@@ -173,38 +173,69 @@
         } catch {
         }
     });
+</script>
 
-    // Very small cookie banner + Consent Mode update
-    const CONSENT_KEY = 'thec-cookie-consent-v1';
+<!-- SAFE GTAG FALLBACK + Consent banner logic -->
+<script>
+    // ---- SAFE GTAG FALLBACK (αν μπλοκάρεται η βιβλιοθήκη, δεν σκάει) ----
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () {
+        dataLayer.push(arguments);
+    };
 
-    function setConsent(granted) {
-        gtag('consent', 'update', {
-            analytics_storage: granted ? 'granted' : 'denied',
-            functionality_storage: granted ? 'granted' : 'denied',
-            ad_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-        });
-        localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied');
-    }
-
-    (function initCookieBar() {
-        const saved = localStorage.getItem(CONSENT_KEY);
+    // ---- CONSENT + COOKIE BANNER ----
+    document.addEventListener('DOMContentLoaded', function () {
+        const CONSENT_KEY = 'thec-cookie-consent-v1';
         const bar = document.getElementById('cookiebar');
+        const btnAccept = document.getElementById('cookies-accept');
+        const btnDecline = document.getElementById('cookies-decline');
+
+        function setConsent(granted) {
+            try {
+                gtag('consent', 'update', {
+                    analytics_storage: granted ? 'granted' : 'denied',
+                    functionality_storage: granted ? 'granted' : 'denied',
+                    ad_storage: 'denied',
+                    ad_user_data: 'denied',
+                    ad_personalization: 'denied'
+                });
+            } catch (e) {
+                console.debug('gtag consent error (ignored):', e);
+            }
+            try {
+                localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied');
+            } catch (e) {
+                console.debug('localStorage error (ignored):', e);
+            }
+        }
+
+        // αρχικοποίηση banner
+        let saved = null;
+        try {
+            saved = localStorage.getItem(CONSENT_KEY);
+        } catch {
+        }
         if (!saved) {
-            bar.hidden = false;
+            if (bar) bar.hidden = false;   // δείξε το banner
         } else {
             setConsent(saved === 'granted');
+            if (bar) bar.hidden = true;
         }
-        document.getElementById('cookies-accept').addEventListener('click', () => {
-            setConsent(true);
-            bar.hidden = true;
-        });
-        document.getElementById('cookies-decline').addEventListener('click', () => {
-            setConsent(false);
-            bar.hidden = true;
-        });
-    })();
+
+        // κλικ handlers
+        if (btnAccept) {
+            btnAccept.addEventListener('click', function () {
+                setConsent(true);
+                if (bar) bar.hidden = true;
+            });
+        }
+        if (btnDecline) {
+            btnDecline.addEventListener('click', function () {
+                setConsent(false);
+                if (bar) bar.hidden = true;
+            });
+        }
+    });
 </script>
 </body>
 </html>
