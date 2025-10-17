@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="el">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>THEC – Ισολογισμοί</title>
+    <meta name="description" content="Ετήσια ανάρτηση ισολογισμών εταιρείας THEC." />
+    <style>
+        :root { color-scheme: light dark; }
+        body{font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 16px;line-height:1.6}
+        header{margin-bottom:20px}
+        h1{font-size:2rem;margin:0 0 4px}
+        .note{color:#666;margin:0 0 16px}
+        .list{display:grid;gap:12px}
+        .card{border:1px solid #ddd;border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between}
+        .year{font-weight:700;font-size:1.05rem}
+        .btn{display:inline-block;border:1px solid #333;border-radius:10px;padding:8px 12px;text-decoration:none}
+        footer{margin-top:32px;font-size:.9rem;color:#666}
+        @media (prefers-color-scheme: dark){ .card{border-color:#444} .btn{border-color:#aaa} }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Ισολογισμοί THEC</h1>
+    <p class="note">Κατάθεση ετήσιων οικονομικών καταστάσεων (PDF).</p>
+</header>
+
+<section id="list" class="list"></section>
+
+<footer>
+    © THEC · Επικοινωνία: <a href="mailto:info@theccompany.eu">info@theccompany.eu</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+    // Render από το window.BALANCES (δες data.js)
+    const list = document.getElementById('list');
+    window.BALANCES
+        .sort((a,b)=>b.year-a.year)
+        .forEach(({year, file, label}) => {
+            const a = document.createElement('a');
+            a.href = `./pdfs/${file}`;
+            a.download = '';
+            a.className = 'btn';
+            a.textContent = label || `Λήψη PDF`;
+            const div = document.createElement('div');
+            div.className = 'card';
+            const y = document.createElement('div');
+            y.className = 'year';
+            y.textContent = String(year);
+            div.appendChild(y);
+            div.appendChild(a);
+            list.appendChild(div);
+        });
+</script>
+</body>
+</html>
