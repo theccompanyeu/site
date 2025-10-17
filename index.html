@@ -78,6 +78,12 @@
             background: #333;
             color: #fff
         }
+
+        /* force hide για το cookie banner */
+        .cookiebar.is-hidden {
+            display: none !important;
+        }
+
         @media (prefers-color-scheme: dark){ .card{border-color:#444} .btn{border-color:#aaa} }
     </style>
 
@@ -175,20 +181,15 @@
     });
 </script>
 
-<!-- SAFE GTAG FALLBACK + Consent banner logic -->
+<!-- SAFE GTAG FALLBACK + Consent banner logic (class + hidden attr) -->
 <script>
-    // ---- SAFE GTAG FALLBACK (αν μπλοκάρεται η βιβλιοθήκη, δεν σκάει) ----
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () {
         dataLayer.push(arguments);
     };
 
-    // ---- CONSENT + COOKIE BANNER ----
-    document.addEventListener('DOMContentLoaded', function () {
+    (function () {
         const CONSENT_KEY = 'thec-cookie-consent-v1';
-        const bar = document.getElementById('cookiebar');
-        const btnAccept = document.getElementById('cookies-accept');
-        const btnDecline = document.getElementById('cookies-decline');
 
         function setConsent(granted) {
             try {
@@ -202,6 +203,7 @@
             } catch (e) {
                 console.debug('gtag consent error (ignored):', e);
             }
+
             try {
                 localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied');
             } catch (e) {
@@ -209,33 +211,59 @@
             }
         }
 
-        // αρχικοποίηση banner
-        let saved = null;
-        try {
-            saved = localStorage.getItem(CONSENT_KEY);
-        } catch {
-        }
-        if (!saved) {
-            if (bar) bar.hidden = false;   // δείξε το banner
-        } else {
-            setConsent(saved === 'granted');
-            if (bar) bar.hidden = true;
+        function showBar(bar) {
+            if (!bar) return;
+            bar.classList.remove('is-hidden');
+            bar.removeAttribute('hidden');            // <-- σημαντικό
         }
 
-        // κλικ handlers
-        if (btnAccept) {
-            btnAccept.addEventListener('click', function () {
-                setConsent(true);
-                if (bar) bar.hidden = true;
-            });
+        function hideBar(bar) {
+            if (!bar) return;
+            bar.classList.add('is-hidden');
+            bar.setAttribute('hidden', '');            // <-- σημαντικό
         }
-        if (btnDecline) {
-            btnDecline.addEventListener('click', function () {
-                setConsent(false);
-                if (bar) bar.hidden = true;
-            });
+
+        function initConsentUI() {
+            const bar = document.getElementById('cookiebar');
+            const btnAccept = document.getElementById('cookies-accept');
+            const btnDecline = document.getElementById('cookies-decline');
+
+            let saved = null;
+            try {
+                saved = localStorage.getItem(CONSENT_KEY);
+            } catch {
+            }
+
+            if (!saved) {
+                showBar(bar);                            // δείξε το banner
+            } else {
+                setConsent(saved === 'granted');
+                hideBar(bar);                            // κρύψ’ το αν υπάρχει ήδη επιλογή
+            }
+
+            if (btnAccept) {
+                btnAccept.type = 'button';
+                btnAccept.addEventListener('click', function () {
+                    setConsent(true);
+                    hideBar(bar);
+                });
+            }
+            if (btnDecline) {
+                btnDecline.type = 'button';
+                btnDecline.addEventListener('click', function () {
+                    setConsent(false);
+                    hideBar(bar);
+                });
+            }
         }
-    });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initConsentUI, {once: true});
+        } else {
+            initConsentUI();
+        }
+    })();
 </script>
+
 </body>
 </html>
