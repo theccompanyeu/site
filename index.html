@@ -5,38 +5,137 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>THEC – Ισολογισμοί</title>
     <meta name="description" content="Ετήσια ανάρτηση ισολογισμών εταιρείας THEC." />
+    <link rel="canonical" href="https://www.theccompany.eu/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="THEC – Ισολογισμοί">
+    <meta property="og:description" content="Ετήσια ανάρτηση ισολογισμών εταιρείας THEC.">
+    <meta property="og:url" content="https://www.theccompany.eu/">
+    <meta property="og:type" content="website">
+
     <style>
         :root { color-scheme: light dark; }
-        body{font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 16px;line-height:1.6}
+
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            max-width: 760px;
+            margin: 48px auto;
+            padding: 0 16px;
+            line-height: 1.6
+        }
         header{margin-bottom:20px}
         h1{font-size:2rem;margin:0 0 4px}
+
+        h2 {
+            margin: 4px 0 12px
+        }
         .note{color:#666;margin:0 0 16px}
         .list{display:grid;gap:12px}
         .card{border:1px solid #ddd;border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between}
         .year{font-weight:700;font-size:1.05rem}
         .btn{display:inline-block;border:1px solid #333;border-radius:10px;padding:8px 12px;text-decoration:none}
         footer{margin-top:32px;font-size:.9rem;color:#666}
+
+        .cookiebar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #111;
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 9999
+        }
+
+        .cookiebar p {
+            margin: 0;
+            font-size: .95rem
+        }
+
+        .cookiebar .actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .cookiebtn {
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer
+        }
+
+        .cookiebtn.primary {
+            background: #22c55e;
+            color: #111;
+            font-weight: 600
+        }
+
+        .cookiebtn.secondary {
+            background: #333;
+            color: #fff
+        }
         @media (prefers-color-scheme: dark){ .card{border-color:#444} .btn{border-color:#aaa} }
     </style>
+
+    <!-- Google tag (gtag.js) – GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-19NCWDM9YM"></script>
+    <script>
+        // Consent Mode v2 (default: όλα denied εκτός security)
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('consent', 'default', {
+            ad_storage: 'denied',
+            analytics_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            functionality_storage: 'denied',
+            security_storage: 'granted'
+        });
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-19NCWDM9YM', {
+            anonymize_ip: true,
+            send_page_view: true
+        });
+    </script>
 </head>
 <body>
 <header>
     <h1>TheC Company</h1>
-    <h2> Ισολογισμοί </h2>
+    <h2>Ισολογισμοί</h2>
     <p class="note">Ανάρτηση ετήσιων οικονομικών καταστάσεων (PDF).</p>
 </header>
 
 <section id="list" class="list"></section>
 
 <footer>
-    © THEOFILOS CHANIALAKIS SINGLE MEMBER P.C. · Επικοινωνία: <a href="mailto:thec.company.eu@gmail.com">thec.company.eu@gmail.com</a>
+    © THEOFILOS CHANIALAKIS SINGLE MEMBER P.C. · Επικοινωνία:
+    <a href="mailto:thec.company.eu@gmail.com">thec.company.eu@gmail.com</a>
 </footer>
+
+<!-- Cookie banner -->
+<div id="cookiebar" class="cookiebar" role="dialog" aria-live="polite" aria-label="Cookie consent" hidden>
+    <p>Χρησιμοποιούμε cookies για βασικές λειτουργίες και ανώνυμα στατιστικά. Επιλέξτε τι προτιμάτε.</p>
+    <div class="actions">
+        <button class="cookiebtn secondary" id="cookies-decline">Μόνο απαραίτητα</button>
+        <button class="cookiebtn primary" id="cookies-accept">Αποδοχή analytics</button>
+    </div>
+</div>
 
 <script src="data.js"></script>
 <script>
-    // Render από το window.BALANCES (δες data.js)
+    // Render λίστας από window.BALANCES (δες data.js)
     const list = document.getElementById('list');
-    window.BALANCES
+    (window.BALANCES || [])
         .sort((a,b)=>b.year-a.year)
         .forEach(({year, file, label}) => {
             const a = document.createElement('a');
@@ -53,6 +152,59 @@
             div.appendChild(a);
             list.appendChild(div);
         });
+
+    // Track PDF downloads + outbound clicks
+    document.addEventListener('click', e => {
+        const a = e.target.closest('a');
+        if (!a) return;
+        const href = (a.getAttribute('href') || '').toLowerCase();
+        if (href.endsWith('.pdf')) {
+            gtag('event', 'file_download', {
+                file_name: href,
+                link_text: (a.textContent || '').trim(),
+                location: window.location.pathname
+            });
+        }
+        try {
+            const url = new URL(href, location.href);
+            if (url.host !== location.host) {
+                gtag('event', 'click_outbound', {destination: url.host, href});
+            }
+        } catch {
+        }
+    });
+
+    // Very small cookie banner + Consent Mode update
+    const CONSENT_KEY = 'thec-cookie-consent-v1';
+
+    function setConsent(granted) {
+        gtag('consent', 'update', {
+            analytics_storage: granted ? 'granted' : 'denied',
+            functionality_storage: granted ? 'granted' : 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+        });
+        localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied');
+    }
+
+    (function initCookieBar() {
+        const saved = localStorage.getItem(CONSENT_KEY);
+        const bar = document.getElementById('cookiebar');
+        if (!saved) {
+            bar.hidden = false;
+        } else {
+            setConsent(saved === 'granted');
+        }
+        document.getElementById('cookies-accept').addEventListener('click', () => {
+            setConsent(true);
+            bar.hidden = true;
+        });
+        document.getElementById('cookies-decline').addEventListener('click', () => {
+            setConsent(false);
+            bar.hidden = true;
+        });
+    })();
 </script>
 </body>
 </html>
